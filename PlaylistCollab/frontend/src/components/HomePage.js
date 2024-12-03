@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
 
     const[playlistId, setPlaylistId] = useState('');
+
+    //const navigate = useNavigate();
 
     const handleIdChange = (text) => {
         console.log(text);
@@ -11,7 +13,8 @@ const HomePage = () => {
     }
     
     const handleSearchClick = () => {
-        console.log('Click');
+        console.log('click');
+        //navigate('/playlistView');
     }
 
     return(
