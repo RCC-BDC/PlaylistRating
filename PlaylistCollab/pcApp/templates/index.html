@@ -3,10 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>Playlist Rating</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body>
 
     <h1>Find A Playlist</h1>
+
+    <button type="submit" id="testButton">Test Button</button>
+
+    <script>
+        $("#testButton").click(function(){
+            $.ajax({
+                type: 'GET',
+                url: 'http://localhost:8000/token',
+                success: function(data, status, xhr) {
+                    console.log('data: ', status);
+                },
+                error: function(){
+                    console.log("error")
+                }
+            })
+        })
+
+    </script>
 
 </body>
 </html>
