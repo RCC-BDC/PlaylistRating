@@ -10,15 +10,17 @@
 
     <h1>Find A Playlist</h1>
 
-    <button type="submit" id="testButton">Test Button</button>
+    <button type="submit" id="testButton">Spotify Login</button>
 
     <script>
         $("#testButton").click(function(){
             $.ajax({
                 type: 'GET',
-                url: 'http://localhost:8000/token',
+                url: 'http://localhost:8000/authorize',
                 success: function(data, status, xhr) {
-                    console.log('data: ', status);
+                    console.log("status: ", status);
+                    console.log(data);
+                    console.log(data.url);
                 },
                 error: function(){
                     console.log("error")

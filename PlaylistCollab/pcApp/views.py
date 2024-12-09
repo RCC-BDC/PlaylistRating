@@ -4,17 +4,43 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import SpotifyToken
 from .spotifyutils import updateSpotifyToken
+from requests import Request, post, get
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
 import os
-import requests
 import base64
+import string
+import random
 import json
 
 # Create your views here.
 
 def homePage(request):
-    # Authorize Spotify
 
+    # Authorize Spotify
     return render(request, "index.html")
+
+class spotifyAuthoization(APIView):
+    def get(self, request, format=None):
+        scopes = 'playlist-read-collaborative'
+        client_id = os.environ['client_id']
+        response_type = 'code'
+        # move redirect to script
+        redirect = os.environ['redirect_url']
+        state = ''.join(random.choices(string.ascii_letters, k=16))
+
+        # Prepare url to send to spotify
+        # Spotify then asks user to approve permissions then redirects to specified url
+        url = Request('GET', 'https://accounts.spotify.com/authorize', params={
+            'client_id': client_id,
+            'response_type': response_type,
+            'redirect_uri': redirect,
+            'state': state,
+            'scope': scopes
+        }).prepare().url
+
+        return Response({'url': url}, status=status.HTTP_200_OK)
 
 
 def testCall(request):
@@ -34,7 +60,7 @@ def testCall(request):
     body = {"grant_type": grant_type}
 
     # Send request
-    req = requests.post(url, data=body, headers=headers)
+    req = post(url, data=body, headers=headers)
 
     data = req.json()
     print(data)
@@ -54,12 +80,10 @@ def getTrack(request):
     token = data[0].access_token
     headers = {"Authorization": f"Bearer {token}" }
 
-    req = requests.get(full_url, headers=headers)
+    req = get(full_url, headers=headers)
     resp = req.json()
     print(resp)
 
     return HttpResponse(status=200)
-
-
 
 

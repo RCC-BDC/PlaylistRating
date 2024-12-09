@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path('', views.homePage),
-    path('token', views.getTrack)
+    path('authorize', views.spotifyAuthoization.as_view())
 ]
