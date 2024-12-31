@@ -1,9 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 from .models import SpotifyToken
-from .spotifyutils import updateSpotifyToken
+from .spotifyutils import updateSpotifyToken, createUserTokenEntry, getState
 from requests import Request, post, get
 from rest_framework.response import Response
 from rest_framework import status
@@ -32,17 +32,63 @@ class spotifyAuthoization(APIView):
 
         # Prepare url to send to spotify
         # Spotify then asks user to approve permissions then redirects to specified url
+        print("Preparing url")
         url = Request('GET', 'https://accounts.spotify.com/authorize', params={
             'client_id': client_id,
             'response_type': response_type,
             'redirect_uri': redirect,
             'state': state,
-            'scope': scopes
+            'scope': scopes,
+            'show_dialog': True
         }).prepare().url
+
+        print("Creating user entry")
+        createUserTokenEntry(state)
 
         return Response({'url': url}, status=status.HTTP_200_OK)
 
 
+def spotifyCallBack(request, format=None):
+    print("Received spotify callback")
+    client_id = os.environ['client_id']
+    secret_id = os.environ['secret_id']
+    savedState = getState()
+
+    token_str = client_id + ":" + secret_id
+    token_ascii_bytes = token_str.encode('ascii')
+    base_64_enc = base64.b64encode(token_ascii_bytes)
+    base_64_str = base_64_enc.decode('ascii')
+
+    code = request.GET['code']
+    state = request.GET['state']
+
+    if savedState != state:
+        print("States are not equal")
+        return
+
+    redirectUrl = os.environ['redirect_url']
+    url = 'https://accounts.spotify.com/api/token'
+    data = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': redirectUrl}
+    headers = {"Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Basic {base_64_str}"}
+
+    print("Sending Post request to spotyify")
+    res = post(url, data=data, headers=headers)
+
+    print("Parsing response into json")
+    responseData = res.json()
+    access_token = responseData.get('access_token')
+    token_type = responseData.get('token_type')
+    refresh_token = responseData.get('refresh_token')
+    print("Updating user entry")
+    updateSpotifyToken(access_token, token_type, refresh_token)
+
+    # need to save user token
+    # render page
+    return redirect("http://localhost:8000")
+
+
+
+# Currently used for just client_credentials token
 def testCall(request):
     # Create request
 

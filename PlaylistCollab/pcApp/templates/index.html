@@ -19,8 +19,7 @@
                 url: 'http://localhost:8000/authorize',
                 success: function(data, status, xhr) {
                     console.log("status: ", status);
-                    console.log(data);
-                    console.log(data.url);
+                    window.location.replace(data.url);
                 },
                 error: function(){
                     console.log("error")
