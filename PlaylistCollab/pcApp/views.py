@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 from .models import SpotifyToken
-from .spotifyutils import updateSpotifyToken, createUserTokenEntry, getState
+from .spotifyutils import *
 from requests import Request, post, get
 from rest_framework.response import Response
 from rest_framework import status
@@ -44,7 +44,6 @@ class spotifyAuthoization(APIView):
 
         print("Creating user entry")
         createUserTokenEntry(state)
-
         return Response({'url': url}, status=status.HTTP_200_OK)
 
 
@@ -87,9 +86,15 @@ def spotifyCallBack(request, format=None):
     return redirect("http://localhost:8000")
 
 
+def testCall\
+                (request):
+    endpoint = "/v1/me"
+    executeGetReq(endpoint)
+    return HttpResponse(status=200)
+
 
 # Currently used for just client_credentials token
-def testCall(request):
+def clientCredCall(request):
     # Create request
 
     # Need to source script for values

@@ -5,29 +5,21 @@
     <title>Playlist Rating</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    {% load static %}
 </head>
 <body>
 
     <h1>Find A Playlist</h1>
 
-    <button type="submit" id="testButton">Spotify Login</button>
+    <div>
+        <button type="submit" id="loginButton">Spotify Login</button>
+    </div>
 
-    <script>
-        $("#testButton").click(function(){
-            $.ajax({
-                type: 'GET',
-                url: 'http://localhost:8000/authorize',
-                success: function(data, status, xhr) {
-                    console.log("status: ", status);
-                    window.location.replace(data.url);
-                },
-                error: function(){
-                    console.log("error")
-                }
-            })
-        })
+    <div>
+        <button type="submit" id="testButton">Test</button>
+    </div>
 
-    </script>
+    <script src="{% static 'functionality.js' %}"></script>
 
 </body>
 </html>

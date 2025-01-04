@@ -4,5 +4,6 @@ from . import views
 urlpatterns = [
     path('', views.homePage),
     path('authorize', views.spotifyAuthoization.as_view()),
-    path('redirect', views.spotifyCallBack)
+    path('redirect', views.spotifyCallBack),
+    path('test', views.testCall)
 ]

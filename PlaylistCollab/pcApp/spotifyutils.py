@@ -1,12 +1,15 @@
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from .models import SpotifyToken
+from time import time
+from requests import get
 
 def getEntry(userId):
     userEntry = SpotifyToken.objects.filter(user=userId)
     if userEntry.exists():
         return userEntry[0]
     else:
+        print("User not found when retrieving")
         return None
 
 
@@ -15,7 +18,15 @@ def createUserTokenEntry(state):
     user = "TestUser"
     userEntry = getEntry(user)
     if userEntry:
-        return None
+        print("User already exists, check if token expired")
+        diff = userEntry.expires_in.timestamp() - time()
+        if diff < 0:
+            print("User token expired, update token")
+            # Eventually get refresh logic
+            userEntry.delete()
+        else:
+            print("User token is good")
+            return None
 
     entry = SpotifyToken(user=user, state=state)
     entry.save()
@@ -50,4 +61,21 @@ def getState():
     else:
         print("User Not Found. Cannot retrieve state")
         return
+
+def executeGetReq(endpoint):
+    baseUrl = "https://api.spotify.com"
+    url = baseUrl + endpoint
+    print("Url= " + url)
+
+    user = getEntry("TestUser")
+    accessToken = user.access_token
+    tokenType = user.token_type
+    headers = {"Authorization": tokenType + " " + accessToken}
+
+    res = get(url, headers=headers)
+    print(res)
+    print(res.json())
+
+    return
+
 
