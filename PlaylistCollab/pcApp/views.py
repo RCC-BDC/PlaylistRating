@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.utils import timezone
+from django.template import loader
 from datetime import timedelta
 from .models import SpotifyToken
 from .spotifyutils import *
@@ -20,6 +21,17 @@ def homePage(request):
 
     # Authorize Spotify
     return render(request, "index.html")
+
+def createAccountReq(request):
+    return render(request, "create_account.html")
+
+class createUserAccount(APIView):
+    def post(self, request, format=None):
+        print("User Account Created")
+        return Response({}, status=status.HTTP_201_CREATED)
+
+def loginReq(request):
+    return render(request, "login.html")
 
 class spotifyAuthoization(APIView):
     def get(self, request, format=None):
@@ -78,6 +90,8 @@ def spotifyCallBack(request, format=None):
     access_token = responseData.get('access_token')
     token_type = responseData.get('token_type')
     refresh_token = responseData.get('refresh_token')
+    endpoint = "/v1/me"
+    executeGetReq(endpoint)
     print("Updating user entry")
     updateSpotifyToken(access_token, token_type, refresh_token)
 
@@ -86,8 +100,7 @@ def spotifyCallBack(request, format=None):
     return redirect("http://localhost:8000")
 
 
-def testCall\
-                (request):
+def testCall(request):
     endpoint = "/v1/me"
     executeGetReq(endpoint)
     return HttpResponse(status=200)
@@ -122,7 +135,6 @@ def clientCredCall(request):
 
 
 def getTrack(request):
-
     base_url = "https://api.spotify.com/v1/tracks/"
     track_id = "1dHJETCn2X1R1YwVlMvSza"
     full_url = base_url + track_id
@@ -135,6 +147,10 @@ def getTrack(request):
     resp = req.json()
     print(resp)
 
+    return HttpResponse(status=200)
+
+def apicheck(request):
+    print("Alive")
     return HttpResponse(status=200)
 
 

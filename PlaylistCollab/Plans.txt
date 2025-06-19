@@ -29,3 +29,13 @@ UserInfo
 -username,pass,saved playlists
 Vote
 -playlistId, songId, up/down vote
+
+NextSteps
+Should you require a spotify account to do anything on the site?
+How to save a username
+
+
+ToDo/TechDebt
+Need to figure out how to handle js files in production
+Refresh tokens
+
