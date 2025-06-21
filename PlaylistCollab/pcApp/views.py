@@ -5,6 +5,7 @@ from django.template import loader
 from datetime import timedelta
 from .models import SpotifyToken
 from .spotifyutils import *
+from .accountutils import *
 from requests import Request, post, get
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,6 +15,8 @@ import base64
 import string
 import random
 import json
+from django.views.decorators.csrf import requires_csrf_token, csrf_protect
+
 
 # Create your views here.
 
@@ -25,10 +28,20 @@ def homePage(request):
 def createAccountReq(request):
     return render(request, "create_account.html")
 
+""""
 class createUserAccount(APIView):
+    @csrf_protect
     def post(self, request, format=None):
         print("User Account Created")
         return Response({}, status=status.HTTP_201_CREATED)
+"""
+@csrf_protect
+def createUserAccount(request):
+    print("createUserAcct - views")
+    res = createUser(request.POST)
+    if res:
+        return HttpResponse(status=201)
+    return HttpResponse(reason="Username Taken", status=400)
 
 def loginReq(request):
     return render(request, "login.html")

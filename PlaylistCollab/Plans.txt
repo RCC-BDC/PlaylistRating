@@ -36,6 +36,8 @@ How to save a username
 
 
 ToDo/TechDebt
+- CSRF checking
+
 Need to figure out how to handle js files in production
 Refresh tokens
 

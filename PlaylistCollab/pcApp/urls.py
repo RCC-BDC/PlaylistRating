@@ -9,5 +9,5 @@ urlpatterns = [
     path('authorize', views.spotifyAuthoization.as_view()),
     path('redirect', views.spotifyCallBack),
     path('test', views.testCall),
-    path('newUserAcct', views.createUserAccount.as_view())
+    path('newUserAcct', views.createUserAccount)
 ]
