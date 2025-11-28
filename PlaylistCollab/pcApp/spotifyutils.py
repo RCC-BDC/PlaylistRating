@@ -34,15 +34,16 @@ def createUserTokenEntry(state):
     return
 
 
-def updateSpotifyToken(accessToken, tokenType, refreshToken):
+def updateSpotifyToken(data):
     user = "TestUser"
     userEntry = getEntry(user)
     if userEntry:
         userEntry.expires_in = timezone.now() + timedelta(seconds=3600)
-        userEntry.access_token = accessToken
-        userEntry.token_type = tokenType
-        userEntry.refresh_token = refreshToken
-        userEntry.save(update_fields=['access_token', 'token_type', 'refresh_token', 'expires_in'])
+        userEntry.access_token = data.get("access_token")
+        userEntry.token_type = data.get("token_type")
+        print(data.get("expires_in"))
+        #userEntry.refresh_token = refreshToken
+        userEntry.save(update_fields=['access_token', 'token_type', 'expires_in'])
         print("Updated user entry")
     else:
         print("User Not Found. Cannot update token")
@@ -70,6 +71,8 @@ def executeGetReq(endpoint):
     user = getEntry("TestUser")
     accessToken = user.access_token
     tokenType = user.token_type
+    print(accessToken)
+    print(tokenType)
     headers = {"Authorization": tokenType + " " + accessToken}
 
     res = get(url, headers=headers)

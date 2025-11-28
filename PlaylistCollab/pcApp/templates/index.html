@@ -10,8 +10,19 @@
 <body>
 
     <script src="{% static 'functionality.js' %}"></script>
+    <script src="{% static 'playlistSearch.js' %}"></script>
 
     <h1>Find A Playlist</h1>
+<div>
+    <br>
+    <form>
+        {% csrf_token %}
+        <label for="playlist">Playlist Link</label>
+        <input type="text" id="playlistLink"> 
+        <input type="submit" value="Submit" id="submitLinkBtn"> 
+    </form>
+    <br> <br>
+</div>
 
     <div>
         <button id="createAccount">Create Account</button>

@@ -6,8 +6,9 @@ urlpatterns = [
     path('alive', views.apicheck),
     path('createacct', views.createAccountReq),
     path('login', views.loginReq),
-    path('authorize', views.spotifyAuthoization.as_view()),
-    path('redirect', views.spotifyCallBack),
-    path('test', views.testCall),
-    path('newUserAcct', views.createUserAccount)
+    path('test', views.getTrack),
+    path('newUserAcct', views.createUserAccount),
+    path('updateSpotifyAccess', views.clientCredCall),
+    path('getPlaylist', views.getPlaylist),
+    path('playlistLink', views.getPlaylistLink)
 ]
