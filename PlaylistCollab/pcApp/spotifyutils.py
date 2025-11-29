@@ -81,4 +81,17 @@ def executeGetReq(endpoint):
 
     return
 
+def getPlaylist(playlistId):
+    base_url = "https://api.spotify.com/v1/playlists/"
+    playlist_id = "7mUiJ5dq241vFALzw7FKSb/tracks?limit=2"
+    full_url = base_url + playlist_id
+
+    data = SpotifyToken.objects.filter(user="TestUser")
+    token = data[0].access_token
+    headers = {"Authorization": f"Bearer {token}" }
+
+    req = get(full_url, headers=headers)
+    resp = req.json()
+    print(resp)
+
 

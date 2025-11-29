@@ -9,6 +9,6 @@ urlpatterns = [
     path('test', views.getTrack),
     path('newUserAcct', views.createUserAccount),
     path('updateSpotifyAccess', views.clientCredCall),
-    path('getPlaylist', views.getPlaylist),
+    path('getPlaylist', views.getPlaylistWeb),
     path('playlistLink', views.getPlaylistLink)
 ]

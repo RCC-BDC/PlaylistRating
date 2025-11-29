@@ -6,6 +6,7 @@ from datetime import timedelta
 from .models import SpotifyToken
 from .spotifyutils import *
 from .accountutils import *
+from .generalutils import *
 from requests import Request, post, get
 from rest_framework.response import Response
 from rest_framework import status
@@ -146,7 +147,7 @@ def clientCredCall(request):
 
     return HttpResponse(status=200)
 
-def getPlaylist(request):
+def getPlaylistWeb(request):
     base_url = "https://api.spotify.com/v1/playlists/"
     playlist_id = "7mUiJ5dq241vFALzw7FKSb/tracks?limit=2"
     full_url = base_url + playlist_id
@@ -162,7 +163,11 @@ def getPlaylist(request):
     return HttpResponse(status=200)
 
 def getPlaylistLink(request):
-    print("Endpoint running")
+    print("Get PLaylist Endpoint")
+    link = request.POST.get("link")
+    parseLink(link)
+    getPlaylist(link)
+
     return HttpResponse(status=200)
 
 
