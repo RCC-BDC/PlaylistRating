@@ -1,20 +1,19 @@
-
 $(document).ready(function() {
-    $("#getMetrics").click(function() {
-        console.log("Click");
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8000/spotifyAuth',
+            url: 'http://localhost:8000/getTopArtists',
             success: function(data, status, xhr) {
                 console.log(status);
-                console.log(data.url);
-                window.location.replace(data.url);
+                populateTable();
             },
             error: function() {
                 console.log('Error');
             }
         })
-    })
+
+        function populateTable(){
+            $("#artistList").append("<li>" + "FirstEntryAuto" + "</li>" );
+        }
+
+
 })
-
-

@@ -14,3 +14,11 @@ def parseLink(link):
     playlistId = link[playlistKeyword:questionmarkPos]
 
     print(playlistId)
+    return playlistId
+
+
+def parsePlaylistReturn(playlist_dict):
+    items = playlist_dict.get("tracks")
+    #print(items.get("items")[0])
+    return items
+

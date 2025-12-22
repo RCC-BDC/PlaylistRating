@@ -4,11 +4,9 @@ from . import views
 urlpatterns = [
     path('', views.homePage),
     path('alive', views.apicheck),
-    path('createacct', views.createAccountReq),
-    path('login', views.loginReq),
     path('test', views.getTrack),
-    path('newUserAcct', views.createUserAccount),
-    path('updateSpotifyAccess', views.clientCredCall),
-    path('getPlaylist', views.getPlaylistWeb),
-    path('playlistLink', views.getPlaylistLink)
+    path('spotifyAuth', views.spotifyAuthoization.as_view()),
+    path('redirect', views.spotifyCallBack),
+    path('getTopArtists', views.getUserTopArtists),
+    path('UserTopArtists', views.renderUserArtistPage)
 ]

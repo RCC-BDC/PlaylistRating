@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from .models import SpotifyToken
 from time import time
 from requests import get
+from .generalutils import parsePlaylistReturn
 
 def getEntry(userId):
     userEntry = SpotifyToken.objects.filter(user=userId)
@@ -19,6 +20,7 @@ def createUserTokenEntry(state):
     userEntry = getEntry(user)
     if userEntry:
         print("User already exists, check if token expired")
+        return None
         diff = userEntry.expires_in.timestamp() - time()
         if diff < 0:
             print("User token expired, update token")
@@ -41,9 +43,8 @@ def updateSpotifyToken(data):
         userEntry.expires_in = timezone.now() + timedelta(seconds=3600)
         userEntry.access_token = data.get("access_token")
         userEntry.token_type = data.get("token_type")
-        print(data.get("expires_in"))
-        #userEntry.refresh_token = refreshToken
-        userEntry.save(update_fields=['access_token', 'token_type', 'expires_in'])
+        userEntry.refresh_token = data.get("refreshToken")
+        userEntry.save(update_fields=['access_token', 'token_type', 'expires_in', 'refresh_token'])
         print("Updated user entry")
     else:
         print("User Not Found. Cannot update token")
@@ -71,20 +72,20 @@ def executeGetReq(endpoint):
     user = getEntry("TestUser")
     accessToken = user.access_token
     tokenType = user.token_type
-    print(accessToken)
-    print(tokenType)
+    print("User access token: " + accessToken)
+    print("User token type: " + tokenType)
     headers = {"Authorization": tokenType + " " + accessToken}
 
     res = get(url, headers=headers)
-    print(res)
-    print(res.json())
-
-    return
+    return res
 
 def getPlaylist(playlistId):
     base_url = "https://api.spotify.com/v1/playlists/"
-    playlist_id = "7mUiJ5dq241vFALzw7FKSb/tracks?limit=2"
-    full_url = base_url + playlist_id
+    #playlist_id = "7mUiJ5dq241vFALzw7FKSb/tracks?limit=2&fields=items(added_at,added_by.id,track(name,artists(name),album(name)))"
+    #full_url = base_url + playlistId + "/tracks?limit=2&fields=items(added_at,added_by.id,track(name,artists(name),album(name)))"
+
+    limiter = "/tracks?fields=items(added_at, added_by.id, track(name,artists(name),album(name))"
+    full_url = base_url + playlistId
 
     data = SpotifyToken.objects.filter(user="TestUser")
     token = data[0].access_token
@@ -92,6 +93,11 @@ def getPlaylist(playlistId):
 
     req = get(full_url, headers=headers)
     resp = req.json()
-    print(resp)
+    #print(resp)
+    print(full_url)
+
+    parsed_data = parsePlaylistReturn(resp)
+
+    #print(parsed_data)
 
 

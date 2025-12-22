@@ -29,13 +29,9 @@ def homePage(request):
 def createAccountReq(request):
     return render(request, "create_account.html")
 
-""""
-class createUserAccount(APIView):
-    @csrf_protect
-    def post(self, request, format=None):
-        print("User Account Created")
-        return Response({}, status=status.HTTP_201_CREATED)
-"""
+def renderUserArtistPage(request):
+    return render(request, "metrics_page.html")
+
 @csrf_protect
 def createUserAccount(request):
     print("createUserAcct - views")
@@ -47,12 +43,15 @@ def createUserAccount(request):
 def loginReq(request):
     return render(request, "login.html")
 
+def playlistViewerRender(request):
+    print("Hit Render")
+    return render(request, "playlist_view.html")
+
 class spotifyAuthoization(APIView):
     def get(self, request, format=None):
-        scopes = 'playlist-read-collaborative'
+        scopes = 'user-top-read'
         client_id = os.environ['client_id']
         response_type = 'code'
-        # move redirect to script
         redirect = os.environ['redirect_url']
         state = ''.join(random.choices(string.ascii_letters, k=16))
 
@@ -69,7 +68,10 @@ class spotifyAuthoization(APIView):
         }).prepare().url
 
         print("Creating user entry")
+        print(redirect)
         createUserTokenEntry(state)
+
+        # Return url for client to go to spotify approval page
         return Response({'url': url}, status=status.HTTP_200_OK)
 
 
@@ -87,11 +89,16 @@ def spotifyCallBack(request, format=None):
     code = request.GET['code']
     state = request.GET['state']
 
+    # State need to be saved in cookie or local storage
+    """
     if savedState != state:
         print("States are not equal")
         return
+    """
 
     redirectUrl = os.environ['redirect_url']
+
+    # Need to pass code from spotify back to spotify authorization to retrieve the auth token
     url = 'https://accounts.spotify.com/api/token'
     data = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': redirectUrl}
     headers = {"Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Basic {base_64_str}"}
@@ -101,17 +108,12 @@ def spotifyCallBack(request, format=None):
 
     print("Parsing response into json")
     responseData = res.json()
-    access_token = responseData.get('access_token')
-    token_type = responseData.get('token_type')
-    refresh_token = responseData.get('refresh_token')
-    endpoint = "/v1/me"
-    executeGetReq(endpoint)
     print("Updating user entry")
-    updateSpotifyToken(access_token, token_type, refresh_token)
+    updateSpotifyToken(responseData)
 
     # need to save user token
     # render page
-    return redirect("http://localhost:8000")
+    return redirect("http://localhost:8000/UserTopArtists")
 
 
 def testCall(request):
@@ -165,8 +167,8 @@ def getPlaylistWeb(request):
 def getPlaylistLink(request):
     print("Get PLaylist Endpoint")
     link = request.POST.get("link")
-    parseLink(link)
-    getPlaylist(link)
+    playlist_id = parseLink(link)
+    getPlaylist(playlist_id)
 
     return HttpResponse(status=200)
 
@@ -189,5 +191,16 @@ def getTrack(request):
 def apicheck(request):
     print("Alive")
     return HttpResponse(status=200)
+
+def getUserTopArtists(request):
+    endpoint = "/v1/me/top/tracks"
+    #res = executeGetReq(endpoint)
+    #print(res.json())
+
+    return HttpResponse(status=200)
+
+
+
+
 
 
