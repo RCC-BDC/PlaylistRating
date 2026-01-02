@@ -1,29 +1,21 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.utils import timezone
-from django.template import loader
-from datetime import timedelta
-from .models import SpotifyToken
-from .spotifyutils import *
-from .accountutils import *
-from .generalutils import *
-from requests import Request, post, get
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
+from django.shortcuts import render
+from django.http import JsonResponse
+from .spotifyUtils import *
+from .userTokenManager import *
+from .dataParser import *
+from .requestHandler import *
+from requests import post, get
+from rest_framework.decorators import api_view
 import os
 import base64
 import string
 import random
-import json
 from django.views.decorators.csrf import requires_csrf_token, csrf_protect
 
 
 # Create your views here.
 
 def homePage(request):
-
-    # Authorize Spotify
     return render(request, "index.html")
 
 def createAccountReq(request):
@@ -32,122 +24,101 @@ def createAccountReq(request):
 def renderUserArtistPage(request):
     return render(request, "metrics_page.html")
 
+# Deprecated function
 @csrf_protect
 def createUserAccount(request):
     print("createUserAcct - views")
-    res = createUser(request.POST)
+    res = None
     if res:
         return HttpResponse(status=201)
     return HttpResponse(reason="Username Taken", status=400)
 
-def loginReq(request):
-    return render(request, "login.html")
+@api_view(['GET'])
+def spotifyAuthoization(request):
+    # See if they already were logged in
+    currentUserId = request.COOKIES.get("usr")
 
-def playlistViewerRender(request):
-    print("Hit Render")
-    return render(request, "playlist_view.html")
+    # if true, look for user in database
+    if currentUserId:
+        userExists = searchUser(currentUserId)
+        if userExists:
+            # See if spotify token has expired
+            expired = isTokenExpired(currentUserId)
+            if not expired:
+                data = "Found"
+                resp = HttpResponse(data, status=200)
+                return resp
 
-class spotifyAuthoization(APIView):
-    def get(self, request, format=None):
-        scopes = 'user-top-read'
-        client_id = os.environ['client_id']
-        response_type = 'code'
-        redirect = os.environ['redirect_url']
-        state = ''.join(random.choices(string.ascii_letters, k=16))
+    # else create a user entry in db and give them a token
+    state = ''.join(random.choices(string.ascii_letters, k=16))
+    user = createUserTokenEntry(state)
 
-        # Prepare url to send to spotify
-        # Spotify then asks user to approve permissions then redirects to specified url
-        print("Preparing url")
-        url = Request('GET', 'https://accounts.spotify.com/authorize', params={
-            'client_id': client_id,
-            'response_type': response_type,
-            'redirect_uri': redirect,
-            'state': state,
-            'scope': scopes,
-            'show_dialog': True
-        }).prepare().url
-
-        print("Creating user entry")
-        print(redirect)
-        createUserTokenEntry(state)
-
-        # Return url for client to go to spotify approval page
-        return Response({'url': url}, status=status.HTTP_200_OK)
-
+    resp = buildSpotifyAuthUrl(user, state)
+    return resp
 
 def spotifyCallBack(request, format=None):
     print("Received spotify callback")
-    client_id = os.environ['client_id']
-    secret_id = os.environ['secret_id']
-    savedState = getState()
 
-    token_str = client_id + ":" + secret_id
-    token_ascii_bytes = token_str.encode('ascii')
-    base_64_enc = base64.b64encode(token_ascii_bytes)
-    base_64_str = base_64_enc.decode('ascii')
-
+    # Get data from request
     code = request.GET['code']
     state = request.GET['state']
 
-    # State need to be saved in cookie or local storage
-    """
-    if savedState != state:
-        print("States are not equal")
-        return
-    """
+    # Check that states align
+    # Check state
+    if not checkState(state):
+        print("States do match")
+        resp = HttpResponse("Issue Authorizing")
+        resp.status_code = 500
+        return resp
 
-    redirectUrl = os.environ['redirect_url']
+    resp = getAccessTokenFromSpotify(code)
 
-    # Need to pass code from spotify back to spotify authorization to retrieve the auth token
-    url = 'https://accounts.spotify.com/api/token'
-    data = {'grant_type': 'authorization_code', 'code': code, 'redirect_uri': redirectUrl}
-    headers = {"Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Basic {base_64_str}"}
+    # Update db with access token
+    updateUserWithAccessToken(state, resp)
 
-    print("Sending Post request to spotyify")
-    res = post(url, data=data, headers=headers)
-
-    print("Parsing response into json")
-    responseData = res.json()
-    print("Updating user entry")
-    updateSpotifyToken(responseData)
-
-    # need to save user token
-    # render page
-    return redirect("http://localhost:8000/UserTopArtists")
+    # Redirect to metrics page
+    data = "Found"
+    responseToClient = HttpResponse(data, status=200)
+    return redirect("/UserTopArtists")
 
 
+@api_view(['GET'])
+def apicheck(request):
+    print("Alive")
+    return HttpResponse(status=200)
+
+@api_view(['GET'])
 def testCall(request):
     endpoint = "/v1/me"
     executeGetReq(endpoint)
     return HttpResponse(status=200)
 
+@api_view(['GET'])
+def getUserTopArtists(request):
+    print("Top Artist View")
+    # See if user is authenticated
+    currentUserId = request.COOKIES.get('usr')
+    if currentUserId == None:
+        return HttpResponse(status=403)
 
-# Currently used for just client_credentials token
-def clientCredCall(request):
-    # Create request
+    # use user cookie to find session, check for entry and expires_in
+    userObject = getUser(currentUserId)
+    expired = isTokenExpired(userObject.user)
+    if expired:
+        # Redirect user to homepage
+        data = "Expired"
+        resp = HttpResponse(data, status=200)
+        return resp
 
-    # Need to source script for values
-    client_id = os.environ['client_id']
-    print(client_id)
-    secret_id = os.environ['secret_id']
+    # Make call to spotify to get user data
+    endpoint = "/v1/me/top/artists?limit=10"
+    response = executeGetReq(userObject, endpoint)
 
-    grant_type = "client_credentials"
-    token_str = client_id + ":" + secret_id
-    token_ascii_bytes = token_str.encode('ascii')
-    base_64_enc = base64.b64encode(token_ascii_bytes)
-    base_64_str = base_64_enc.decode('ascii')
-    url = 'https://accounts.spotify.com/api/token'
-    headers = {"Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Basic {base_64_str}"}
-    body = {"grant_type": grant_type}
-
-    # Send request
-    req = post(url, data=body, headers=headers)
-
-    data = req.json()
-    print(data)
-    updateSpotifyToken(data)
-
-    return HttpResponse(status=200)
+    # Parse data into form readable for client
+    parsedData = parseTopArtists(response.json())
+    print(len(parsedData))
+    # Return data to client
+    return JsonResponse(parsedData, status=200)
 
 def getPlaylistWeb(request):
     base_url = "https://api.spotify.com/v1/playlists/"
@@ -188,18 +159,33 @@ def getTrack(request):
 
     return HttpResponse(status=200)
 
-def apicheck(request):
-    print("Alive")
+# Currently used for just client_credentials token
+# Deprecated
+def clientCredCall(request):
+    # Create request
+
+    # Need to source script for values
+    client_id = os.environ['client_id']
+    print(client_id)
+    secret_id = os.environ['secret_id']
+
+    grant_type = "client_credentials"
+    token_str = client_id + ":" + secret_id
+    token_ascii_bytes = token_str.encode('ascii')
+    base_64_enc = base64.b64encode(token_ascii_bytes)
+    base_64_str = base_64_enc.decode('ascii')
+    url = 'https://accounts.spotify.com/api/token'
+    headers = {"Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Basic {base_64_str}"}
+    body = {"grant_type": grant_type}
+
+    # Send request
+    req = post(url, data=body, headers=headers)
+
+    data = req.json()
+    print(data)
+    updateUserWithAccessToken(data)
+
     return HttpResponse(status=200)
-
-def getUserTopArtists(request):
-    endpoint = "/v1/me/top/tracks"
-    #res = executeGetReq(endpoint)
-    #print(res.json())
-
-    return HttpResponse(status=200)
-
-
 
 
 

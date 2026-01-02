@@ -1,4 +1,20 @@
+from django.shortcuts import redirect
+from .classes import Artist
 
+def parseTopArtists(respObj):
+    # Iterate over each result returned
+    items = respObj.get('items')
+    artistDataList = []
+    for artist in items:
+        # genres, images, name, followers
+        artistObj = Artist.Artist()
+        artistObj.name = artist.get('name')
+        artistObj.genre = artist.get('genres')[0]
+        artistObj.followers = artist.get('followers').get('total')
+        artistObj.popularity = artist.get('popularity')
+        artistDataList.append(artistObj)
+
+    return artistDataList
 
 def parseLink(link):
     spotifyKeyWord = link.find("spotify")
