@@ -24,6 +24,9 @@ def createAccountReq(request):
 def renderUserArtistPage(request):
     return render(request, "metrics_page.html")
 
+def renderTestHtmlPage(requst):
+    return render(requst, "test.html")
+
 # Deprecated function
 @csrf_protect
 def createUserAccount(request):
@@ -116,9 +119,9 @@ def getUserTopArtists(request):
 
     # Parse data into form readable for client
     parsedData = parseTopArtists(response.json())
-    print(len(parsedData))
+    resp = {"artists": parsedData}
     # Return data to client
-    return JsonResponse(parsedData, status=200)
+    return JsonResponse(resp, status=200)
 
 def getPlaylistWeb(request):
     base_url = "https://api.spotify.com/v1/playlists/"

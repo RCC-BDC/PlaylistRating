@@ -8,5 +8,5 @@ urlpatterns = [
     path('spotifyAuth', views.spotifyAuthoization),
     path('redirect', views.spotifyCallBack),
     path('getTopArtists', views.getUserTopArtists),
-    path('UserTopArtists', views.renderUserArtistPage, name='user-artist-page')
+    path('UserTopArtists', views.renderUserArtistPage, name='user-artist-page'),
 ]

@@ -1,5 +1,5 @@
-from django.shortcuts import redirect
 from .classes import Artist
+from json import dumps
 
 def parseTopArtists(respObj):
     # Iterate over each result returned
@@ -12,7 +12,8 @@ def parseTopArtists(respObj):
         artistObj.genre = artist.get('genres')[0]
         artistObj.followers = artist.get('followers').get('total')
         artistObj.popularity = artist.get('popularity')
-        artistDataList.append(artistObj)
+        artistObj.image = artist.get('images')[1].get('url')
+        artistDataList.append(artistObj.toJSON())
 
     return artistDataList
 
