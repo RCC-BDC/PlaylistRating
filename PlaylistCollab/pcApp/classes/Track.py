@@ -1,11 +1,11 @@
 from json import dumps
 
-class Artist:
+class Track:
 
     def __init__(self):
         self.name = ""
-        self.genre = ""
-        self.followers = 0
+        self.album = ""
+        self.artists = []
         self.popularity = 0
         self.image = ""
         return

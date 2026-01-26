@@ -22,10 +22,10 @@ def createAccountReq(request):
     return render(request, "create_account.html")
 
 def renderUserArtistPage(request):
-    return render(request, "metrics_page.html")
+    return render(request, "artists_page.html")
 
-def renderTestHtmlPage(requst):
-    return render(requst, "test.html")
+def renderUserSongPage(requst):
+    return render(requst, "songs_page.html")
 
 # Deprecated function
 @csrf_protect
@@ -118,8 +118,37 @@ def getUserTopArtists(request):
     response = executeGetReq(userObject, endpoint)
 
     # Parse data into form readable for client
-    parsedData = parseTopArtists(response.json())
-    resp = {"artists": parsedData}
+    parsedArtists = parseTopArtists(response.json())
+    resp = {"artists": parsedArtists}
+
+    # Return data to client
+    return JsonResponse(resp, status=200)
+
+
+@api_view(['GET'])
+def getUserTopSongs(request):
+    # See if user is authenticated
+    currentUserId = request.COOKIES.get('usr')
+    if currentUserId == None:
+        return HttpResponse(status=403)
+
+    # use user cookie to find session, check for entry and expires_in
+    userObject = getUser(currentUserId)
+    expired = isTokenExpired(userObject.user)
+    if expired:
+        # Redirect user to homepage
+        data = "Expired"
+        resp = HttpResponse(data, status=200)
+        return resp
+
+    # Make call to spotify to get user data
+    endpoint = "/v1/me/top/tracks?limit=10"
+    response = executeGetReq(userObject, endpoint)
+
+    # Parse data into form readable for client
+    parsedTracks = parseTopTracks(response.json())
+    resp = {"tracks": parsedTracks}
+
     # Return data to client
     return JsonResponse(resp, status=200)
 
